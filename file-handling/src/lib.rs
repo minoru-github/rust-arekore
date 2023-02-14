@@ -28,7 +28,7 @@ fn retrive_name_vec(path: &Path, kind: Kind) -> io::Result<Vec<PathBuf>> {
     Ok(names)
 }
 
-pub fn retrive_folder_name_vec(path: &Path) -> io::Result<Vec<PathBuf>> {
+pub fn retrive_dir_name_vec(path: &Path) -> io::Result<Vec<PathBuf>> {
     retrive_name_vec(path, Kind::Dir)
 }
 
@@ -48,7 +48,22 @@ pub fn retrive_name_vec_with_pattern_match(names: Vec<PathBuf>, pattern: &str) -
 
 pub fn copy_files(path_vec: Vec<PathBuf>, dist: &Path) -> io::Result<()> {
     for path in path_vec {
+        // let dir = path.read_dir()?;
+        // println!("{:?}", dir);
+
         let to = dist.join(path.file_name().unwrap());
+        fs::copy(path, to)?;
+    }
+    Ok(())
+}
+
+pub fn copy_files_with_dir_name(path_vec: Vec<PathBuf>, dist: &Path) -> io::Result<()> {
+    for path in path_vec {
+        let ext = path.extension().unwrap();
+        let parent_dir = path.parent().unwrap();
+
+        let file_name = parent_dir.file_name().unwrap();
+        let to = dist.join(file_name).with_extension(ext);
         fs::copy(path, to)?;
     }
     Ok(())
@@ -60,16 +75,16 @@ mod tests {
 
     #[test]
     fn test_retrive_folder_names() {
-        let ans = vec!["0001", "0002", "0003", "hoge"];
-        let ans = ans
+        let expect = vec!["0001", "0002", "0003", "annotation"];
+        let expect = expect
             .iter()
             .map(|&a| PathBuf::from(a))
             .collect::<Vec<PathBuf>>();
 
         let path = Path::new("./test-data");
-        let names = retrive_folder_name_vec(path);
+        let names = retrive_dir_name_vec(path);
         if let Ok(names) = names {
-            assert_eq!(ans, names);
+            assert_eq!(expect, names);
         } else {
             assert!(false);
         }
@@ -88,18 +103,18 @@ mod tests {
 
     #[test]
     fn test_retrive_names_with_pattern_match() {
-        let ans = vec!["0001", "0002", "0003"];
-        let ans = ans
+        let expect = vec!["0001", "0002", "0003"];
+        let expect = expect
             .iter()
             .map(|&a| PathBuf::from(a))
             .collect::<Vec<PathBuf>>();
 
         let path = Path::new("./test-data");
-        let names = retrive_folder_name_vec(path);
+        let names = retrive_dir_name_vec(path);
         if let Ok(names) = names {
             let regex = r"\d{4}";
             let names = retrive_name_vec_with_pattern_match(names, regex);
-            assert_eq!(ans, names);
+            assert_eq!(expect, names);
         } else {
             assert!(false);
         }
@@ -107,12 +122,6 @@ mod tests {
 
     #[test]
     fn test_copy_files() {
-        let ans = vec!["1.txt", "2.txt", "Cargo.toml"];
-        let ans = ans
-            .iter()
-            .map(|&a| PathBuf::from(a))
-            .collect::<Vec<PathBuf>>();
-
         let files = vec!["./test-data/1.txt", "./test-data/2.txt"];
         let path_vec = files
             .iter()
@@ -126,19 +135,75 @@ mod tests {
         let dist = Path::new(".");
         copy_files(path_vec.clone(), dist).ok();
 
-        let names = retrive_file_name_vec(Path::new(".")).ok().unwrap();
-        assert_eq!(ans, names);
+        let expect = vec!["1.txt", "2.txt", "Cargo.toml"];
+        let expect = expect
+            .iter()
+            .map(|&a| PathBuf::from(a))
+            .collect::<Vec<PathBuf>>();
 
-        // 後始末
+        let names = retrive_file_name_vec(Path::new("."));
+        if let Ok(names) = names {
+            assert_eq!(expect, names);
+
+            // 後始末
+            path_vec.iter().for_each(|path| {
+                fs::remove_file(path).ok();
+            });
+
+            names
+                .iter()
+                .filter(|f| f.file_name().unwrap() != "Cargo.toml")
+                .for_each(|f| {
+                    fs::remove_file(f).ok();
+                });
+        } else {
+            assert!(false);
+        }
+    }
+
+    #[test]
+    fn test_copy_files_with_dir_name() {
+        let files = vec![
+            "./test-data/0001/fuga.txt",
+            "./test-data/0002/fuga.txt",
+            "./test-data/0003/fuga.txt",
+        ];
+        let path_vec = files
+            .iter()
+            .map(|&f| PathBuf::from(f))
+            .collect::<Vec<PathBuf>>();
+
         path_vec.iter().for_each(|path| {
-            fs::remove_file(path).ok();
+            fs::File::create(path).ok();
         });
 
-        names
+        let dist = Path::new("./test-data/annotation/");
+        copy_files_with_dir_name(path_vec.clone(), dist).ok();
+
+        let expect = vec!["0001.txt", "0002.txt", "0003.txt"];
+        let expect = expect
             .iter()
-            .filter(|f| f.file_name().unwrap() != "Cargo.toml")
-            .for_each(|f| {
-                fs::remove_file(f).ok();
-            })
+            .map(|&a| PathBuf::from(a))
+            .collect::<Vec<PathBuf>>();
+
+        let names = retrive_file_name_vec(Path::new("./test-data/annotation/"));
+        if let Ok(names) = names {
+            // 後始末
+            path_vec.iter().for_each(|path| {
+                fs::remove_file(path).ok();
+            });
+
+            names
+                .iter()
+                .filter(|f| f.file_name().unwrap() != "Cargo.toml")
+                .for_each(|f| {
+                    let path = Path::new("./test-data/annotation/");
+                    fs::remove_file(path.join(f)).ok();
+                });
+
+            assert_eq!(expect, names);
+        } else {
+            assert!(false);
+        }
     }
 }
