@@ -7,7 +7,7 @@ enum Kind {
     File,
 }
 
-fn get_names(path: String, kind: Kind) -> io::Result<Vec<String>> {
+fn retrive(path: String, kind: Kind) -> io::Result<Vec<String>> {
     let mut names = vec![];
 
     let entries = fs::read_dir(path)?;
@@ -27,12 +27,12 @@ fn get_names(path: String, kind: Kind) -> io::Result<Vec<String>> {
     Ok(names)
 }
 
-pub fn get_folder_names(path: String) -> io::Result<Vec<String>> {
-    get_names(path, Kind::Dir)
+pub fn retrive_folder_names(path: String) -> io::Result<Vec<String>> {
+    retrive(path, Kind::Dir)
 }
 
-pub fn get_file_names(path: String) -> io::Result<Vec<String>> {
-    get_names(path, Kind::File)
+pub fn retrive_file_names(path: String) -> io::Result<Vec<String>> {
+    retrive(path, Kind::File)
 }
 
 pub fn get_names_with_pattern_match(names: Vec<String>, pattern: &str) -> Vec<String> {
@@ -48,20 +48,20 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_get_folder_names() {
+    fn test_retrive_folder_names() {
         let path = "./test-data".to_string();
-        let names = get_folder_names(path);
+        let names = retrive_folder_names(path);
         if let Ok(names) = names {
-            assert_eq!(vec!["0001", "0002", "0003","hoge"], names);
+            assert_eq!(vec!["0001", "0002", "0003", "hoge"], names);
         } else {
             assert!(false);
         }
     }
 
     #[test]
-    fn test_get_file_names() {
+    fn test_retrive_file_names() {
         let path = ".".to_string();
-        let names = get_file_names(path);
+        let names = retrive_file_names(path);
         if let Ok(names) = names {
             assert_eq!(vec!["Cargo.toml"], names);
         } else {
@@ -70,9 +70,9 @@ mod tests {
     }
 
     #[test]
-    fn test_get_names_with_pattern_match() {
+    fn test_retrive_names_with_pattern_match() {
         let path = "./test-data".to_string();
-        let names = get_folder_names(path);
+        let names = retrive_folder_names(path);
         if let Ok(names) = names {
             let regex = r"\d{4}";
             let names = get_names_with_pattern_match(names, regex);
