@@ -180,7 +180,7 @@ mod tests {
         let dist = Path::new("./test-data/annotation/");
         copy_files_with_dir_name(path_vec.clone(), dist).ok();
 
-        let expect = vec!["0001.txt", "0002.txt", "0003.txt"];
+        let expect = vec![".gitignore", "0001.txt", "0002.txt", "0003.txt"];
         let expect = expect
             .iter()
             .map(|&a| PathBuf::from(a))
@@ -195,7 +195,9 @@ mod tests {
 
             names
                 .iter()
-                .filter(|f| f.file_name().unwrap() != "Cargo.toml")
+                .filter(|f| {
+                    f.file_name().unwrap() != "Cargo.toml" && f.file_name().unwrap() != ".gitignore"
+                })
                 .for_each(|f| {
                     let path = Path::new("./test-data/annotation/");
                     fs::remove_file(path.join(f)).ok();
