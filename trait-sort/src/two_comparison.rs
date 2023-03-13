@@ -1,4 +1,6 @@
 #![allow(unused)]
+use std::cmp::Ordering;
+
 pub struct Node {
     pub id: usize,
     parent: Option<usize>,
@@ -14,5 +16,10 @@ impl Node {
             childs: vec![],
             score,
         }
+    }
+}
+impl PartialEq for Node {
+    fn eq(&self, other: &Self) -> bool {
+        self.score == other.score
     }
 }

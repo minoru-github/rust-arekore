@@ -1,6 +1,23 @@
 #![allow(unused)]
 use std::cmp::Ordering;
-use crate::Node;
+
+pub struct Node {
+    pub id: usize,
+    parent: Option<usize>,
+    childs: Vec<usize>,
+    pub score: i32,
+}
+
+impl Node {
+    pub fn new(id: usize, score: i32) -> Self {
+        Node {
+            id,
+            parent: None,
+            childs: vec![],
+            score,
+        }
+    }
+}
 
 // https://doc.rust-lang.org/stable/std/cmp/trait.Ord.html#how-can-i-implement-ord
 impl PartialEq for Node {
@@ -51,7 +68,7 @@ mod tests {
             ans.push(node.id);
         }
 
-        let est = vec![2,3,0,1];
-        assert_eq!(ans,est);
+        let est = vec![2, 3, 0, 1];
+        assert_eq!(ans, est);
     }
 }
