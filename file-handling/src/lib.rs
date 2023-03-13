@@ -71,6 +71,8 @@ pub fn copy_files_with_dir_name(path_vec: Vec<PathBuf>, dist: &Path) -> io::Resu
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeSet;
+
     use super::*;
 
     #[test]
@@ -185,6 +187,7 @@ mod tests {
             .iter()
             .map(|&a| PathBuf::from(a))
             .collect::<Vec<PathBuf>>();
+        let expect = BTreeSet::from_iter(expect.into_iter());
 
         let names = retrive_file_name_vec(Path::new("./test-data/annotation/"));
         if let Ok(names) = names {
@@ -202,6 +205,7 @@ mod tests {
                     let path = Path::new("./test-data/annotation/");
                     fs::remove_file(path.join(f)).ok();
                 });
+            let names = BTreeSet::from_iter(names.into_iter());
 
             assert_eq!(expect, names);
         } else {
