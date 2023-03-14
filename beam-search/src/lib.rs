@@ -172,13 +172,24 @@ mod tests {
     }
 
     #[test]
-    fn test_beam_search() {
+    fn test_beam_search_w4_d4() {
+        let character = Pos::new(1, 1);
+        let points = vec![vec![4, 6, 1, 3], vec![0, 0, 2, 0], vec![7, 5, 6, 6]];
+        let mut state = State::new(character, points);
+        let beam_width = 4;
+        let beam_depth = 4;
+        let action = state.beam_search(beam_width, beam_depth);
+        assert_eq!(action, Some(1));
+    }
+
+    #[test]
+    fn test_beam_search_w4_d2() {
         let character = Pos::new(1, 1);
         let points = vec![vec![4, 6, 1, 3], vec![0, 0, 2, 0], vec![7, 5, 6, 6]];
         let mut state = State::new(character, points);
         let beam_width = 4;
         let beam_depth = 2;
         let action = state.beam_search(beam_width, beam_depth);
-        assert_eq!(action, Some(1));
+        assert_eq!(action, Some(3));
     }
 }
