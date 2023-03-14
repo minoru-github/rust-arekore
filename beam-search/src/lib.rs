@@ -18,23 +18,25 @@ impl Pos {
     }
 }
 
-pub struct MazeState {
+pub struct State {
     first_action: i32,
     character: Pos,
     points: Vec<Vec<usize>>,
     turn: usize,
     game_score: usize,
+    evaluated_score: usize,
 }
 
-impl MazeState {
+impl State {
     fn new(character: Pos, mut points: Vec<Vec<usize>>) -> Self {
         points[character.y][character.x] = 0;
-        MazeState {
+        State {
             first_action: -1,
             character,
             points,
             turn: 0,
             game_score: 0,
+            evaluated_score: 0,
         }
     }
 
@@ -65,6 +67,10 @@ impl MazeState {
         actions
     }
 
+    fn evaluate_score(&mut self) {
+        self.evaluated_score = self.game_score;
+    }
+
     fn is_done(&self) -> bool {
         self.turn >= END_TURN
     }
@@ -78,7 +84,7 @@ mod tests {
     fn test_advance() {
         let character = Pos::new(1, 1);
         let points = vec![vec![4, 6, 1, 3], vec![0, 0, 2, 0], vec![7, 5, 6, 6]];
-        let mut maze_state = MazeState::new(character, points);
+        let mut maze_state = State::new(character, points);
         let action = 0;
         maze_state.advance(action);
         let action = 1;
@@ -94,14 +100,14 @@ mod tests {
     fn test_legal_actions() {
         let character = Pos::new(0, 0);
         let points = vec![vec![4, 6, 1, 3], vec![0, 0, 2, 0], vec![7, 5, 6, 6]];
-        let mut maze_state = MazeState::new(character, points);
+        let mut maze_state = State::new(character, points);
         let legal_actions = maze_state.legal_actions();
         let expect = vec![0, 1];
         assert_eq!(legal_actions, expect);
 
         let character = Pos::new(1, 1);
         let points = vec![vec![4, 6, 1, 3], vec![0, 0, 2, 0], vec![7, 5, 6, 6]];
-        let mut maze_state = MazeState::new(character, points);
+        let mut maze_state = State::new(character, points);
         let legal_actions = maze_state.legal_actions();
         let expect = vec![0, 1, 2, 3];
         assert_eq!(legal_actions, expect);
@@ -111,7 +117,7 @@ mod tests {
     fn test_beam_search() {
         let character = Pos::new(1, 1);
         let points = vec![vec![4, 6, 1, 3], vec![0, 0, 2, 0], vec![7, 5, 6, 6]];
-        let mut maze_state = MazeState::new(character, points);
+        let mut maze_state = State::new(character, points);
 
         assert_eq!(1, 1);
     }
