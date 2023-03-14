@@ -1,12 +1,15 @@
 #![allow(unused)]
 // Ref. ゲームで学ぶ探索アルゴリズム実践入門
 
+use std::collections::BinaryHeap;
+
 const END_TURN: usize = 4;
 const DX: [usize; 4] = [1, 0, !0, 0];
 const DY: [usize; 4] = [0, 1, 0, !0];
-const HEIGHT: usize = 4;
+const HEIGHT: usize = 3;
 const WIDTH: usize = 4;
 
+#[derive(Clone)]
 pub struct Pos {
     y: usize,
     x: usize,
@@ -18,8 +21,9 @@ impl Pos {
     }
 }
 
+#[derive(Clone)]
 pub struct State {
-    first_action: i32,
+    first_action: Option<usize>,
     character: Pos,
     points: Vec<Vec<usize>>,
     turn: usize,
@@ -31,7 +35,7 @@ impl State {
     fn new(character: Pos, mut points: Vec<Vec<usize>>) -> Self {
         points[character.y][character.x] = 0;
         State {
-            first_action: -1,
+            first_action: None,
             character,
             points,
             turn: 0,
@@ -67,12 +71,66 @@ impl State {
         actions
     }
 
+    fn beam_search(&self, beam_width: usize, beam_depth: usize) -> Option<usize> {
+        let mut now_beam = BinaryHeap::new();
+        let initial_state = self.clone();
+        let mut best_state = initial_state.clone();
+
+        now_beam.push(initial_state);
+        for t in 0..beam_depth {
+            let mut next_beam = BinaryHeap::new();
+            for i in 0..beam_width {
+                if now_beam.is_empty() {
+                    break;
+                }
+                let now_state = now_beam.pop().unwrap();
+                let legal_actions = now_state.legal_actions();
+                for action in legal_actions {
+                    let mut next_state = now_state.clone();
+                    next_state.advance(action);
+                    next_state.evaluate_score();
+                    if t == 0 {
+                        next_state.first_action = Some(action);
+                    }
+                    next_beam.push(next_state);
+                }
+            }
+
+            now_beam = next_beam;
+            best_state = now_beam.peek().unwrap().clone();
+            if best_state.is_done() {
+                break;
+            }
+        }
+        best_state.first_action
+    }
+
     fn evaluate_score(&mut self) {
         self.evaluated_score = self.game_score;
     }
 
     fn is_done(&self) -> bool {
         self.turn >= END_TURN
+    }
+}
+
+impl PartialEq for State {
+    fn eq(&self, other: &Self) -> bool {
+        self.evaluated_score == other.evaluated_score
+    }
+}
+
+impl Eq for State {}
+
+impl PartialOrd for State {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.evaluated_score.cmp(&other.evaluated_score))
+    }
+}
+
+impl Ord for State {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.evaluated_score.cmp(&other.evaluated_score)
     }
 }
 
@@ -100,15 +158,15 @@ mod tests {
     fn test_legal_actions() {
         let character = Pos::new(0, 0);
         let points = vec![vec![4, 6, 1, 3], vec![0, 0, 2, 0], vec![7, 5, 6, 6]];
-        let mut maze_state = State::new(character, points);
-        let legal_actions = maze_state.legal_actions();
+        let mut state = State::new(character, points);
+        let legal_actions = state.legal_actions();
         let expect = vec![0, 1];
         assert_eq!(legal_actions, expect);
 
         let character = Pos::new(1, 1);
         let points = vec![vec![4, 6, 1, 3], vec![0, 0, 2, 0], vec![7, 5, 6, 6]];
-        let mut maze_state = State::new(character, points);
-        let legal_actions = maze_state.legal_actions();
+        let mut state = State::new(character, points);
+        let legal_actions = state.legal_actions();
         let expect = vec![0, 1, 2, 3];
         assert_eq!(legal_actions, expect);
     }
@@ -117,8 +175,10 @@ mod tests {
     fn test_beam_search() {
         let character = Pos::new(1, 1);
         let points = vec![vec![4, 6, 1, 3], vec![0, 0, 2, 0], vec![7, 5, 6, 6]];
-        let mut maze_state = State::new(character, points);
-
-        assert_eq!(1, 1);
+        let mut state = State::new(character, points);
+        let beam_width = 4;
+        let beam_depth = 2;
+        let action = state.beam_search(beam_width, beam_depth);
+        assert_eq!(action, Some(1));
     }
 }
