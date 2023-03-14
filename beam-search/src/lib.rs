@@ -53,6 +53,7 @@ impl State {
         let point = self.points[ty][tx];
         if point > 0 {
             self.game_score += point;
+            self.points[ty][tx] = 0;
         }
         self.turn += 1;
     }
@@ -71,46 +72,26 @@ impl State {
         actions
     }
 
-    fn beam_search(&self, beam_width: usize, beam_depth: usize) -> Option<usize> {
-        let mut now_beam = BinaryHeap::new();
-        let initial_state = self.clone();
-        let mut best_state = initial_state.clone();
-
-        now_beam.push(initial_state);
-        for t in 0..beam_depth {
-            let mut next_beam = BinaryHeap::new();
-            for i in 0..beam_width {
-                if now_beam.is_empty() {
-                    break;
-                }
-                let now_state = now_beam.pop().unwrap();
-                let legal_actions = now_state.legal_actions();
-                for action in legal_actions {
-                    let mut next_state = now_state.clone();
-                    next_state.advance(action);
-                    next_state.evaluate_score();
-                    if t == 0 {
-                        next_state.first_action = Some(action);
-                    }
-                    next_beam.push(next_state);
-                }
-            }
-
-            now_beam = next_beam;
-            best_state = now_beam.peek().unwrap().clone();
-            if best_state.is_done() {
-                break;
-            }
-        }
-        best_state.first_action
-    }
-
     fn evaluate_score(&mut self) {
         self.evaluated_score = self.game_score;
     }
 
     fn is_done(&self) -> bool {
         self.turn >= END_TURN
+    }
+
+    fn debug(&self) {
+        println!("# turn {}", self.turn);
+        for y in 0..HEIGHT {
+            for x in 0..WIDTH {
+                if self.character.y == y && self.character.x == x {
+                    print!("@ ");
+                } else {
+                    print!("{} ", self.points[y][x]);
+                }
+            }
+            println!("");
+        }
     }
 }
 
@@ -132,6 +113,41 @@ impl Ord for State {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.evaluated_score.cmp(&other.evaluated_score)
     }
+}
+
+fn beam_search(state: &State, beam_width: usize, beam_depth: usize) -> Option<usize> {
+    let mut now_beam = BinaryHeap::new();
+    let initial_state = state.clone();
+    let mut best_state = initial_state.clone();
+
+    now_beam.push(initial_state);
+    for t in 0..beam_depth {
+        let mut next_beam = BinaryHeap::new();
+        for i in 0..beam_width {
+            if now_beam.is_empty() {
+                break;
+            }
+            let now_state = now_beam.pop().unwrap();
+            let legal_actions = now_state.legal_actions();
+            for action in legal_actions {
+                let mut next_state = now_state.clone();
+                next_state.advance(action);
+                next_state.evaluate_score();
+                if t == 0 {
+                    next_state.first_action = Some(action);
+                }
+                next_beam.push(next_state);
+            }
+        }
+
+        now_beam = next_beam;
+        best_state = now_beam.peek().unwrap().clone();
+        best_state.debug();
+        if best_state.is_done() {
+            break;
+        }
+    }
+    best_state.first_action
 }
 
 #[cfg(test)]
@@ -172,24 +188,35 @@ mod tests {
     }
 
     #[test]
+    fn test_beam_search_w2_d4() {
+        let character = Pos::new(1, 1);
+        let points = vec![vec![4, 6, 1, 3], vec![0, 0, 2, 0], vec![7, 5, 6, 6]];
+        let mut state = State::new(character, points);
+        let beam_width = 2;
+        let beam_depth = 4;
+        let action = beam_search(&state, beam_width, beam_depth);
+        assert_eq!(action, Some(1));
+    }
+
+        #[test]
     fn test_beam_search_w4_d4() {
         let character = Pos::new(1, 1);
         let points = vec![vec![4, 6, 1, 3], vec![0, 0, 2, 0], vec![7, 5, 6, 6]];
         let mut state = State::new(character, points);
         let beam_width = 4;
         let beam_depth = 4;
-        let action = state.beam_search(beam_width, beam_depth);
-        assert_eq!(action, Some(1));
+        let action = beam_search(&state, beam_width, beam_depth);
+        assert_eq!(action, Some(0));
     }
 
     #[test]
-    fn test_beam_search_w4_d2() {
+    fn test_beam_search_w4_d1() {
         let character = Pos::new(1, 1);
         let points = vec![vec![4, 6, 1, 3], vec![0, 0, 2, 0], vec![7, 5, 6, 6]];
         let mut state = State::new(character, points);
         let beam_width = 4;
-        let beam_depth = 2;
-        let action = state.beam_search(beam_width, beam_depth);
+        let beam_depth = 1;
+        let action = beam_search(&state, beam_width, beam_depth);
         assert_eq!(action, Some(3));
     }
 }
