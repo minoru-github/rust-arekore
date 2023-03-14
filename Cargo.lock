@@ -12,6 +12,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "beam-search"
+version = "0.1.0"
+
+[[package]]
 name = "file-handling"
 version = "0.1.0"
 dependencies = [

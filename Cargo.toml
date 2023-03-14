@@ -3,4 +3,5 @@
 members = [
     "file-handling",
     "trait-sort",
+    "beam-search",
 ]
