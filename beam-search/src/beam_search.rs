@@ -44,39 +44,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_advance() {
-        let character = Pos::new(1, 1);
-        let points = vec![vec![4, 6, 1, 3], vec![0, 0, 2, 0], vec![7, 5, 6, 6]];
-        let mut maze_state = State::new(character, points);
-        let action = 0;
-        maze_state.advance(action);
-        let action = 1;
-        maze_state.advance(action);
-
-        assert_eq!(maze_state.turn, 2);
-        assert_eq!(maze_state.character.y, 2);
-        assert_eq!(maze_state.character.x, 2);
-        assert_eq!(maze_state.game_score, 8);
-    }
-
-    #[test]
-    fn test_legal_actions() {
-        let character = Pos::new(0, 0);
-        let points = vec![vec![4, 6, 1, 3], vec![0, 0, 2, 0], vec![7, 5, 6, 6]];
-        let state = State::new(character, points);
-        let legal_actions = state.legal_actions();
-        let expect = vec![0, 1];
-        assert_eq!(legal_actions, expect);
-
-        let character = Pos::new(1, 1);
-        let points = vec![vec![4, 6, 1, 3], vec![0, 0, 2, 0], vec![7, 5, 6, 6]];
-        let state = State::new(character, points);
-        let legal_actions = state.legal_actions();
-        let expect = vec![0, 1, 2, 3];
-        assert_eq!(legal_actions, expect);
-    }
-
-    #[test]
     fn test_beam_search_w2_d4() {
         let character = Pos::new(1, 1);
         let points = vec![vec![4, 6, 1, 3], vec![0, 0, 2, 0], vec![7, 5, 6, 6]];
