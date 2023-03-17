@@ -79,6 +79,7 @@ impl State {
 
     pub fn debug(&self) {
         println!("# turn {}", self.turn);
+        println!("score {}", self.evaluated_score);
         for y in 0..HEIGHT {
             for x in 0..WIDTH {
                 if self.character.y == y && self.character.x == x {
