@@ -86,7 +86,10 @@ mod tests {
         let path = Path::new("./test-data");
         let names = retrive_dir_name_vec(path);
         if let Ok(names) = names {
-            assert_eq!(expect, names);
+            assert_eq!(
+                BTreeSet::from_iter(expect.iter()),
+                BTreeSet::from_iter(names.iter())
+            );
         } else {
             assert!(false);
         }
@@ -116,7 +119,10 @@ mod tests {
         if let Ok(names) = names {
             let regex = r"\d{4}";
             let names = retrive_name_vec_with_pattern_match(names, regex);
-            assert_eq!(expect, names);
+            assert_eq!(
+                BTreeSet::from_iter(expect.iter()),
+                BTreeSet::from_iter(names.iter())
+            );
         } else {
             assert!(false);
         }
@@ -145,7 +151,10 @@ mod tests {
 
         let names = retrive_file_name_vec(Path::new("."));
         if let Ok(names) = names {
-            assert_eq!(expect, names);
+            assert_eq!(
+                BTreeSet::from_iter(expect.iter()),
+                BTreeSet::from_iter(names.iter())
+            );
 
             // 後始末
             path_vec.iter().for_each(|path| {
@@ -187,7 +196,6 @@ mod tests {
             .iter()
             .map(|&a| PathBuf::from(a))
             .collect::<Vec<PathBuf>>();
-        let expect = BTreeSet::from_iter(expect.into_iter());
 
         let names = retrive_file_name_vec(Path::new("./test-data/annotation/"));
         if let Ok(names) = names {
@@ -205,9 +213,11 @@ mod tests {
                     let path = Path::new("./test-data/annotation/");
                     fs::remove_file(path.join(f)).ok();
                 });
-            let names = BTreeSet::from_iter(names.into_iter());
 
-            assert_eq!(expect, names);
+            assert_eq!(
+                BTreeSet::from_iter(expect.iter()),
+                BTreeSet::from_iter(names.iter())
+            );
         } else {
             assert!(false);
         }
