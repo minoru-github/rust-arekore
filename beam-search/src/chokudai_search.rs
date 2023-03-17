@@ -1,5 +1,7 @@
 #![allow(unused)]
 use crate::state::*;
+use std::cell::RefCell;
+use std::rc::Rc;
 // Ref. ゲームで学ぶ探索アルゴリズム実践入門
 
 use std::collections::BinaryHeap;
@@ -17,8 +19,6 @@ fn chokudai_search(
     beam[0].push(state.clone());
     for cnt in 0..beam_number {
         for t in 0..beam_depth {
-            //let mut now_beam = &mut beam[t];
-            //let mut next_beam = &mut beam[t+1];
             for i in 0..beam_width {
                 if beam[t].is_empty() {
                     break;
@@ -49,6 +49,57 @@ fn chokudai_search(
     for now_beam in beam.iter().rev() {
         if !now_beam.is_empty() {
             return now_beam.peek().unwrap().first_action;
+        }
+    }
+    None
+}
+
+// RefCell遅いので、参考までに
+fn chokudai_search_with_refcell(
+    state: &State,
+    beam_width: usize,
+    beam_depth: usize,
+    beam_number: usize,
+) -> Option<usize> {
+    let mut beam = vec![];
+    for t in 0..beam_depth + 1 {
+        beam.push(Rc::new(RefCell::new(BinaryHeap::new())));
+    }
+    beam[0].borrow_mut().push(state.clone());
+    for cnt in 0..beam_number {
+        for t in 0..beam_depth {
+            let now_beam = beam[t].clone();
+            let next_beam = beam[t + 1].clone();
+            for i in 0..beam_width {
+                if now_beam.borrow().is_empty() {
+                    break;
+                }
+                let now_state = now_beam.borrow_mut().pop().unwrap();
+                if now_state.is_done() {
+                    break;
+                }
+
+                let legal_actions = now_state.legal_actions();
+                for action in legal_actions {
+                    let mut next_state = now_state.clone();
+                    next_state.advance(action);
+                    next_state.evaluate_score();
+                    if t == 0 {
+                        next_state.first_action = Some(action);
+                    }
+                    next_beam.borrow_mut().push(next_state);
+                }
+            }
+        }
+    }
+
+    // for state in beam[beam_depth].iter() {
+    //     state.debug();
+    // }
+
+    for now_beam in beam.iter().rev() {
+        if !now_beam.borrow().is_empty() {
+            return now_beam.borrow().peek().unwrap().first_action;
         }
     }
     None
